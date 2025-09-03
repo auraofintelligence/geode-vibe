@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aura of Intelligence: Interactive Security Architecture</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Harmony -->
+    <!-- Application Structure Plan: The SPA is designed as an interactive dashboard with five thematic sections: 'The Challenge', 'Threat Surface', 'Sovereignty Stack', 'Advanced Safeguards', and 'Real-World Application'. This non-linear, thematic structure was chosen over the report's linear format to enhance usability and exploration. It allows users (e.g., security professionals, stakeholders) to jump directly to their area of interest. Key interactions include clickable diagrams to reveal threat details, expandable cards for protocol information, and toggles to switch between different contextual views (Clinical vs. DevSecCon). This design transforms passive reading into an active, engaging exploration of the complex security architecture. -->
+    <!-- Visualization & Content Choices: Report Info: Tripartite Security Mandate -> Goal: Inform -> Viz: Dynamic Stat Cards -> Interaction: Hover effects -> Justification: Quickly conveys the three core pillars of trust. Report Info: 5-layer cognitive architecture threat model -> Goal: Organize/Explore -> Viz: Interactive HTML/CSS Diagram -> Interaction: Click on a layer to show/hide details -> Justification: Makes the complex threat surface digestible and interactive. Report Info: Foundational & Advanced Protocols -> Goal: Explain/Compare -> Viz: Expandable Info Cards -> Interaction: Click to reveal details -> Justification: Organizes detailed protocol information cleanly. Report Info: DevSecCon Talk Structures -> Goal: Compare -> Viz: Bar Chart (Chart.js) -> Interaction: Dynamic rendering -> Justification: Visually compares the time allocation in the two proposed talk formats. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f7f4;
+            color: #4a4a4a;
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .nav-link.active, .nav-link:hover {
+            color: #835c4b;
+        }
+        .nav-link.active::after, .nav-link:hover::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #835c4b;
+        }
+        .card {
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.07), 0 4px 6px -2px rgba(0,0,0,0.05);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 50vh;
+        }
+        .threat-layer {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .threat-layer.active {
+            background-color: #eaddd7;
+            border-color: #835c4b;
+        }
+        .details-panel {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out;
+        }
+        .details-panel.open {
+            max-height: 1000px;
+            transition: max-height 0.7s ease-in;
+        }
+        .protocol-card.expanded .protocol-details {
+            max-height: 1000px;
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+            opacity: 1;
+        }
+        .protocol-details {
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: all 0.5s ease-in-out;
+        }
+        .toggle-bg:after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            background: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 9999px;
+            transition: 0.3s;
+        }
+        input:checked + .toggle-bg:after {
+            transform: translateX(100%);
+        }
+        input:checked + .toggle-bg {
+            background-color: #835c4b;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="min-h-screen">
+        <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+            <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-xl font-bold text-[#6a4a3d]">Aura of Intelligence Security</h1>
+                    </div>
+                    <div class="hidden md:block">
+                        <div class="ml-10 flex items-baseline space-x-4">
+                            <a href="#challenge" class="nav-link px-3 py-2 rounded-md text-sm font-medium">The Challenge</a>
+                            <a href="#threat-surface" class="nav-link px-3 py-2 rounded-md text-sm font-medium">Threat Surface</a>
+                            <a href="#sovereignty-stack" class="nav-link px-3 py-2 rounded-md text-sm font-medium">Sovereignty Stack</a>
+                            <a href="#advanced-safeguards" class="nav-link px-3 py-2 rounded-md text-sm font-medium">Advanced Safeguards</a>
+                            <a href="#application" class="nav-link px-3 py-2 rounded-md text-sm font-medium">Application</a>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </header>
+
+        <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            
+            <section id="challenge" class="py-12">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold tracking-tight text-[#6a4a3d] sm:text-4xl">The Tripartite Security Mandate</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">Building a sovereign digital twin requires satisfying three distinct, yet deeply interconnected, domains of assurance. A failure in any one domain represents a catastrophic failure of the entire system.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="card p-6 text-center">
+                        <div class="text-4xl text-[#835c4b] mb-4">👤</div>
+                        <h3 class="text-xl font-semibold mb-2">Personal Trust</h3>
+                        <p class="text-gray-600">Users must have unshakeable confidence in the system's ability to protect their autonomy and data. Privacy is not a feature, but the default state of being.</p>
+                    </div>
+                    <div class="card p-6 text-center">
+                        <div class="text-4xl text-[#835c4b] mb-4">🩺</div>
+                        <h3 class="text-xl font-semibold mb-2">Clinical Trust</h3>
+                        <p class="text-gray-600">Clinicians and regulators must trust the system's data integrity, access controls, and auditability for valid clinical decision-making, especially in areas like dementia care.</p>
+                    </div>
+                    <div class="card p-6 text-center">
+                        <div class="text-4xl text-[#835c4b] mb-4">🛡️</div>
+                        <h3 class="text-xl font-semibold mb-2">Technical Trust</h3>
+                        <p class="text-gray-600">The security community must find the architecture robust against sophisticated, AI-native threats, from adversarial attacks to compromised AI agents.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="threat-surface" class="py-12">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold tracking-tight text-[#6a4a3d] sm:text-4xl">Interactive Threat Surface</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">The AI VIBE CODING architecture is a layered pipeline. A vulnerability in one layer can cascade, compromising the entire system. Click on each layer to explore its specific threat vectors and potential impact.</p>
+                </div>
+                <div class="lg:flex lg:space-x-8">
+                    <div class="lg:w-1/3 space-y-4 mb-8 lg:mb-0" id="threat-layers-nav">
+                    </div>
+                    <div class="lg:w-2/3 card p-6">
+                        <div id="threat-details-panel" class="details-panel">
+                            <h3 id="threat-title" class="text-2xl font-bold mb-2 text-[#6a4a3d]"></h3>
+                            <h4 class="font-semibold mt-4 mb-2">Potential Threats:</h4>
+                            <ul id="threat-list" class="list-disc list-inside text-gray-600 space-y-1"></ul>
+                            <h4 class="font-semibold mt-4 mb-2">Impact:</h4>
+                            <p id="threat-impact" class="text-gray-600"></p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="sovereignty-stack" class="py-12">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold tracking-tight text-[#6a4a3d] sm:text-4xl">The Sovereignty Stack</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">A Zero-Trust approach requires a defense-in-depth strategy. These four foundational protocols work in concert to protect the user's digital self from the inside out. Click each protocol to learn more.</p>
+                </div>
+                <div class="space-y-4" id="protocols-container">
+                </div>
+            </section>
+            
+            <section id="advanced-safeguards" class="py-12">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold tracking-tight text-[#6a4a3d] sm:text-4xl">Advanced AI Safeguards</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">Securing the AI "brain" requires specialized protocols to protect against emerging threats to LLMs, autonomous agents, and the AI supply chain.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="advanced-protocols-container">
+                </div>
+            </section>
+
+            <section id="application" class="py-12">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold tracking-tight text-[#6a4a3d] sm:text-4xl">Real-World Application & Communication</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">This security architecture is designed not just for technical resilience, but also for real-world compliance and clear communication. Use the toggle to see how this complex topic can be framed for different audiences.</p>
+                </div>
+                
+                <div class="flex justify-center items-center space-x-4 mb-8">
+                    <span id="view-label-clinical" class="font-semibold text-[#6a4a3d]">Clinical Compliance</span>
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox" id="view-toggle" class="sr-only">
+                        <div class="toggle-bg relative w-12 h-6 bg-gray-200 rounded-full"></div>
+                    </label>
+                    <span id="view-label-devseccon" class="font-semibold text-gray-400">DevSecCon Presentation</span>
+                </div>
+
+                <div id="clinical-view" class="card p-8">
+                    <h3 class="text-2xl font-bold mb-4 text-[#6a4a3d]">The Clinical Crucible</h3>
+                    <p class="mb-6 text-gray-600">The architecture provides the provable evidence needed to satisfy key compliance domains for medical device regulators (TGA) and Human Research Ethics Committees (HREC), especially for vulnerable populations in dementia research.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="font-semibold text-lg mb-2">TGA SaMD Requirements</h4>
+                            <ul class="list-disc list-inside text-gray-600 space-y-1">
+                                <li><strong>Lifecycle Documentation:</strong> AI-BOM provides a complete, auditable software record.</li>
+                                <li><strong>Safety & Performance:</strong> Guardian Protocol's human-in-the-loop provides risk mitigation.</li>
+                                <li><strong>Cybersecurity:</strong> The entire Zero-Trust framework directly addresses TGA's focus.</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-lg mb-2">HREC Ethical Requirements</h4>
+                            <ul class="list-disc list-inside text-gray-600 space-y-1">
+                                <li><strong>Informed Consent:</strong> Blockchain ledger provides an immutable, transparent audit trail of consent.</li>
+                                <li><strong>Privacy & Confidentiality:</strong> Sovereign Vault & VCs offer a state-of-the-art data protection plan.</li>
+                                <li><strong>Minimizing Risk:</strong> Passive data collection reduces burden on vulnerable participants.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="devseccon-view" class="hidden card p-8">
+                    <h3 class="text-2xl font-bold mb-2 text-[#6a4a3d]">Presenting to DevSecCon25</h3>
+                    <p class="mb-6 text-gray-600">The architecture can be distilled into compelling narratives for a technical audience, framed as a case study in designing a secure, AI-native system from first principles.</p>
+                    <div class="chart-container">
+                        <canvas id="devseccon-chart"></canvas>
+                    </div>
+                    <p class="text-center mt-4 text-sm text-gray-500">Proposed time allocation for a 15-min Lightning Talk vs. a 25-min Session.</p>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    const threatData = [
+        {
+            title: 'Sensing & Data Acquisition',
+            threats: ['Sensor Data Spoofing', 'Body-Area Network Eavesdropping', 'IoT Device Compromise'],
+            impact: 'Fundamentally corrupts the digital twin’s perception of reality, leading to flawed health recommendations, incorrect clinical assessments, and potential physical harm.'
+        },
+        {
+            title: 'Context Integration & Semantic Model',
+            threats: ['Knowledge Graph Poisoning', 'Ontological Manipulation', 'Inference Attacks'],
+            impact: 'Corrupts the twin’s "mind," leading to a misunderstanding of the user’s context, needs, and preferences. Results in nonsensical or dangerous recommendations.'
+        },
+        {
+            title: 'Cognitive Processing & Simulation',
+            threats: ['AI Model Extraction', 'Model Inversion & Membership Inference', 'Adversarial Attacks', 'Simulation Hijacking'],
+            impact: 'Represents the theft of the user’s digital essence. Can lead to exposure of sensitive training data and direct manipulation of user behavior.'
+        },
+        {
+            title: 'Adaptive Interface & Interaction',
+            threats: ['XR Overlay Manipulation ("AR Phishing")', 'Memory Palace Injection', 'Conversational Agent Exploitation'],
+            impact: 'Direct attacks on the user’s perception and agency. Can lead to severe psychological distress, financial loss, and a breakdown of trust.'
+        },
+        {
+            title: 'Data Management & Privacy',
+            threats: ['Unauthorized Vault Access', 'Cryptographic Key Compromise', 'Implementation Weaknesses'],
+            impact: 'Catastrophic and irreversible loss of privacy, exposing the entirety of the user’s most sensitive personal, biometric, and historical data.'
+        }
+    ];
+
+    const protocolsData = [
+        {
+            icon: '📦',
+            title: 'The Sovereign Data Vault',
+            subtitle: 'A Zero-Trust Foundation',
+            details: 'The cornerstone of the security model. All personal data defaults to local-first storage on user-controlled devices, with end-to-end encryption where only the user holds the keys. Access is deny-by-default, making large-scale, centralized breaches impossible by design.'
+        },
+        {
+            icon: '🆔',
+            title: 'Decentralized Identity & VCs',
+            subtitle: 'Proving Without Revealing',
+            details: 'Uses Self-Sovereign Identity (SSI) to grant granular, context-specific permissions. A user can issue a Verifiable Credential (VC) to prove a fact (e.g., "completed weekly exercise goal") without revealing the underlying sensitive data, which is critical for clinical and personalization use cases.'
+        },
+        {
+            icon: '🧠',
+            title: 'Federated Learning & Differential Privacy',
+            subtitle: 'Intelligence Without Intrusion',
+            details: 'Resolves the paradox of needing data for AI training while preserving privacy. Models train locally on the user\'s device, and only anonymized, aggregated model updates—not raw data—are sent to a central server. This enables collective intelligence without centralizing sensitive information.'
+        },
+        {
+            icon: '🔗',
+            title: 'Blockchain as an Immutable Ledger',
+            subtitle: 'The Audit Trail of Consent',
+            details: 'While personal data is never on-chain, Distributed Ledger Technology (DLT) provides a tamper-proof, user-auditable trail of every consent and data access event. This transforms consent from a one-time checkbox into a continuous, transparent, and manageable process.'
+        }
+    ];
+
+    const advancedProtocolsData = [
+        {
+            title: 'LLM Security',
+            description: 'Defenses against the OWASP Top 10 for LLMs, including input sanitization to mitigate prompt injection, guardrail models to prevent sensitive data disclosure, and rigorous data provenance checks.'
+        },
+        {
+            title: 'Agentic AI Guardian Protocol',
+            description: 'A safety framework for the autonomous twin. The agent has its own unique digital identity (DID), operates within a strictly defined "capability policy," and requires human-in-the-loop approval for critical actions.'
+        },
+        {
+            title: 'AI Bill of Materials (AI-BOM)',
+            description: 'A comprehensive record of the entire lineage of the AI components (models, datasets, libraries). This enables rapid, targeted security responses to vulnerabilities discovered in the AI supply chain.'
+        },
+        {
+            title: 'Hardware Root of Trust',
+            description: 'The physical "Aura Geode" has a unique, unclonable ID used to seed a master cryptographic key. This creates an immutable, verifiable link between the digital twin\'s origin data and the physical vessel it was created in.'
+        }
+    ];
+    
+    const threatLayersNav = document.getElementById('threat-layers-nav');
+    const threatDetailsPanel = document.getElementById('threat-details-panel');
+    const threatTitle = document.getElementById('threat-title');
+    const threatList = document.getElementById('threat-list');
+    const threatImpact = document.getElementById('threat-impact');
+
+    threatData.forEach((layer, index) => {
+        const layerDiv = document.createElement('div');
+        layerDiv.className = 'threat-layer border border-gray-300 p-4 rounded-lg hover:bg-stone-100';
+        layerDiv.innerHTML = `<h4 class="font-semibold text-lg">${layer.title}</h4>`;
+        layerDiv.addEventListener('click', () => {
+            threatTitle.textContent = layer.title;
+            threatList.innerHTML = layer.threats.map(t => `<li>${t}</li>`).join('');
+            threatImpact.textContent = layer.impact;
+            
+            if (!threatDetailsPanel.classList.contains('open')) {
+                threatDetailsPanel.classList.add('open');
+            }
+
+            document.querySelectorAll('.threat-layer').forEach(el => el.classList.remove('active'));
+            layerDiv.classList.add('active');
+        });
+        threatLayersNav.appendChild(layerDiv);
+        if (index === 0) {
+            layerDiv.click();
+        }
+    });
+
+    const protocolsContainer = document.getElementById('protocols-container');
+    protocolsData.forEach(protocol => {
+        const card = document.createElement('div');
+        card.className = 'protocol-card card p-6 cursor-pointer';
+        card.innerHTML = `
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="text-3xl mr-4">${protocol.icon}</div>
+                    <div>
+                        <h3 class="text-xl font-semibold">${protocol.title}</h3>
+                        <p class="text-gray-500">${protocol.subtitle}</p>
+                    </div>
+                </div>
+                <div class="transform transition-transform duration-300">▼</div>
+            </div>
+            <div class="protocol-details text-gray-600">
+                <p>${protocol.details}</p>
+            </div>
+        `;
+        card.addEventListener('click', () => {
+            card.classList.toggle('expanded');
+            card.querySelector('.transform').classList.toggle('rotate-180');
+        });
+        protocolsContainer.appendChild(card);
+    });
+
+    const advancedProtocolsContainer = document.getElementById('advanced-protocols-container');
+    advancedProtocolsData.forEach(protocol => {
+        const card = document.createElement('div');
+        card.className = 'card p-6';
+        card.innerHTML = `
+            <h3 class="text-xl font-semibold mb-2">${protocol.title}</h3>
+            <p class="text-gray-600">${protocol.description}</p>
+        `;
+        advancedProtocolsContainer.appendChild(card);
+    });
+
+    const viewToggle = document.getElementById('view-toggle');
+    const clinicalView = document.getElementById('clinical-view');
+    const devsecconView = document.getElementById('devseccon-view');
+    const viewLabelClinical = document.getElementById('view-label-clinical');
+    const viewLabelDevseccon = document.getElementById('view-label-devseccon');
+    let devsecconChart = null;
+
+    function renderChart() {
+        if (devsecconChart) {
+            devsecconChart.destroy();
+        }
+        const ctx = document.getElementById('devseccon-chart').getContext('2d');
+        devsecconChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Hook & Vision', 'Core Problem / Tech Dive 1', 'Tech Dive 2', 'Wow Moment / Compliance', 'Conclusion & Q&A'],
+                datasets: [
+                    {
+                        label: 'Lightning Talk (15 min)',
+                        data: [1, 7, 0, 2, 2],
+                        backgroundColor: 'rgba(131, 92, 75, 0.6)',
+                        borderColor: 'rgba(131, 92, 75, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Session (25 min)',
+                        data: [3, 9, 8, 3, 2],
+                        backgroundColor: 'rgba(216, 197, 186, 0.6)',
+                        borderColor: 'rgba(216, 197, 186, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Time (minutes)'
+                        }
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'DevSecCon Presentation Structures',
+                        font: {
+                            size: 16
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += context.parsed.y + ' min';
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    viewToggle.addEventListener('change', () => {
+        const isDevSecCon = viewToggle.checked;
+        clinicalView.classList.toggle('hidden', isDevSecCon);
+        devsecconView.classList.toggle('hidden', !isDevSecCon);
+        
+        viewLabelClinical.classList.toggle('text-[#6a4a3d]', !isDevSecCon);
+        viewLabelClinical.classList.toggle('text-gray-400', isDevSecCon);
+
+        viewLabelDevseccon.classList.toggle('text-[#6a4a3d]', isDevSecCon);
+        viewLabelDevseccon.classList.toggle('text-gray-400', !isDevSecCon);
+
+        if (isDevSecCon && !devsecconChart) {
+            setTimeout(renderChart, 50);
+        }
+    });
+
+    const navLinks = document.querySelectorAll('.nav-link');
+    const sections = document.querySelectorAll('section');
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                navLinks.forEach(link => {
+                    link.classList.toggle('active', link.getAttribute('href').substring(1) === entry.target.id);
+                });
+            }
+        });
+    }, { rootMargin: "-50% 0px -50% 0px" });
+
+    sections.forEach(section => {
+        observer.observe(section);
+    });
+
+    navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.querySelector(link.getAttribute('href')).scrollIntoView({
+                behavior: 'smooth'
+            });
+        });
+    });
+});
+</script>
+</body>
+</html>
